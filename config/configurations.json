@@ -1,0 +1,804 @@
+{
+  "configurations": [
+    {
+      "name": "Liebherr_FMS_LTM models from 2018 (Engine-Upper and LMB override status)",
+      "info_pdf": "config/docs/Liebherr/FMS_Liebherr.pdf",
+      "matched_crane_models": [
+        "All LTM models newer than 2018",
+        "should have the FMS connector installed.", 
+        "See installation example_LTM newer than 2018",
+        "on tap Documentation."
+      ],
+      "signals": [
+        {
+          "name": "Engine On_RPM<200",
+          "can_id": "0x18F00401",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 4,
+          "min_value": "0x06",
+          "max_value": "0xFF"
+        },
+        {
+          "name": "Crane-Upper running",
+          "can_id": "0x18FFE001",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 0,
+          "bit_value": 1
+        },
+        {
+          "name": "LMB override",
+          "can_id": "0x18FFE001",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 2,
+          "bit_index": 1,
+          "bit_value": 1
+        }
+      ],
+      "pgn_channels": [
+        {
+          "label": "Engine RPM",
+          "pgn": "0xF004",
+          "bytes": [3, 4],
+          "byte_order": "little_endian",
+          "scale": 0.125,
+          "offset": 0.0,
+          "unit": "rpm",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil pressure",
+          "pgn": "0xFEEF",
+          "bytes": [3],
+          "byte_order": "little_endian",
+          "scale": 0.04,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant temp",
+          "pgn": "0xFEEE",
+          "bytes": [0],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil temp",
+          "pgn": "0xFEEE",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.03125,
+          "offset": -273,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel temp",
+          "pgn": "0xFEEE",
+          "bytes": [1],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant level",
+          "pgn": "0xFEEF",
+          "bytes": [7],
+          "byte_order": "little_endian",
+          "scale": 0.4,
+          "offset": 0,
+          "unit": "%",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total hours",
+          "pgn": "0xFEE5",
+          "bytes": [0,1,2,3],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total HR fuel used",
+          "pgn": "0xFD09",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.001,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total fuel used",
+          "pgn": "0xFEE9",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.5,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel Rate",
+          "pgn": "0xFEF2",
+          "bytes": [0,1],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "l/h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel pressure_Rail",
+          "pgn": "0xFEDB",
+          "bytes": [4,5],
+          "byte_order": "little_endian",
+          "scale": 0.0390625,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel pressure_Low",
+          "pgn": "0xFEDB",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.0390625,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        }
+      ],
+      "dm1_enabled": true 
+    },
+    {
+      "name": "Standard Engine CAN_J1939_primary engine(Engine 1 status)",
+      "info_pdf": "config/docs/engines/Engine_general.pdf",
+      "matched_crane_models": [
+        "Used to detect engine running, engine values and",
+        "detect error codes.",
+        "The canbus connection should be done on the CAN1 port from",
+        "the Premium BB.",
+        "Easy to identify on any manufacture schemas by",
+        "searching for J1939."
+      ],
+      "signals": [
+        {
+          "name": "Engine On_RPM<200",
+          "can_id": "0x18F00401",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 4,
+          "min_value": "0x06",
+          "max_value": "0xFF"
+        }
+      ],
+      "pgn_channels": [
+        {
+          "label": "Engine RPM",
+          "pgn": "0xF004",
+          "bytes": [3, 4],
+          "byte_order": "little_endian",
+          "scale": 0.125,
+          "offset": 0.0,
+          "unit": "rpm",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil pressure",
+          "pgn": "0xFEEF",
+          "bytes": [3],
+          "byte_order": "little_endian",
+          "scale": 0.04,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant temp",
+          "pgn": "0xFEEE",
+          "bytes": [0],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil temp",
+          "pgn": "0xFEEE",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.03125,
+          "offset": -273,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel temp",
+          "pgn": "0xFEEE",
+          "bytes": [1],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant level",
+          "pgn": "0xFEEF",
+          "bytes": [7],
+          "byte_order": "little_endian",
+          "scale": 0.4,
+          "offset": 0,
+          "unit": "%",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total hours",
+          "pgn": "0xFEE5",
+          "bytes": [0,1,2,3],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total HR fuel used",
+          "pgn": "0xFD09",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.001,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total fuel used",
+          "pgn": "0xFEE9",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.5,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel Rate",
+          "pgn": "0xFEF2",
+          "bytes": [0,1],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "l/h",
+          "format": "{:.2f}"
+        }
+      ],
+      "dm1_enabled": true  
+    },
+    {
+      "name": "Engines older than 2012_primary engine(Engine 1 status)_Alternative: D+",
+      "info_pdf": "",
+      "matched_crane_models": [
+        "Old Mercedes and Liebherr engines. Only for detecting",
+        "engine running"
+      ],
+      "signals": [
+        {
+          "name": "Engine On_RPM<200",
+          "can_id": "0x250",
+          "match_type": "range",
+          "byte_index": 7,
+          "min_value": "0x0E",
+          "max_value": "0xFF"
+        },
+        {
+          "name": "Crane-Upper running",
+          "can_id": "0x18FFE001",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 0,
+          "bit_value": 1
+        }
+      ]
+    },
+    {
+     "name": "Spiering Electric motor Upperstructure",
+      "info_pdf": "",
+      "matched_crane_models": [
+        "BETA version_working on",
+        "Spiering hybrid crane"
+      ],
+      "signals": [
+        {
+          "name": "Electric motor Upperstructure",
+          "can_id": "0x18FF2180",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 4,
+          "bit_value": 1
+        },
+        {
+          "name": "Diesel engine Upperstructure-charging",
+          "can_id": "0x18FF2180",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 0,
+          "bit_value": 1
+        }
+      ]
+    },
+    {
+     "name": "Sany SCC2000A-EV",
+      "info_pdf": "",
+      "matched_crane_models": [
+        "Sany electric LBC crawler",
+        "Checked OK_SUK"
+      ],
+      "signals": [
+        {
+          "name": "Electric motor Upperstructure",
+          "can_id": "0x0CFF81FD",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 0,
+          "bit_value": 1
+        },
+        {
+          "name": "LMB override",
+          "can_id": "0x116",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 0,
+          "bit_value": 1
+        },
+        {
+          "name": "Crawler LHS on",
+          "can_id": "0x0CFE3416",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 0,
+          "min_value": "0x01",
+          "max_value": "0xFF"
+        },
+        {
+          "name": "Crawler RHS on",
+          "can_id": "0x0CFE3516",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 0,
+          "min_value": "0x01",
+          "max_value": "0xFF"
+        }
+      ]
+    },
+    {
+     "name": "Sany SCE1500 TB",
+      "info_pdf": "",
+      "matched_crane_models": [
+        "Sany SCE1500TB - Can 0",
+        "Checked OK_SUK"
+      ],
+      "signals": [
+        {
+          "name": "Engine On_RPM<200",
+          "can_id": "0x18F00401",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 4,
+          "min_value": "0x06",
+          "max_value": "0xFF"
+        },
+        {
+          "name": "LMB override",
+          "can_id": "0x1CFF0F09",
+          "protocol": "j1939",
+          "match_type": "bit",
+          "byte_index": 0,
+          "bit_index": 0,
+          "bit_value": 7
+        }
+      ]
+    },
+    {
+      "name": "Tadano_3-4-5 axle crane_Primary engine_J1939",
+      "info_pdf": "config/docs/Engines/Tadano_J1939_various.pdf",
+      "matched_crane_models": [
+        "AC60-3",
+        "AC100-4",
+        "AC130-5",
+        "AC250-5",
+        "AC220-5"
+      ],
+      "signals": [
+        {
+          "name": "Engine On_RPM<200",
+          "can_id": "0x18F00401",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 4,
+          "min_value": "0x06",
+          "max_value": "0xFF"
+        }
+      ],
+      "pgn_channels": [
+        {
+          "label": "Engine RPM",
+          "pgn": "0xF004",
+          "bytes": [3, 4],
+          "byte_order": "little_endian",
+          "scale": 0.125,
+          "offset": 0.0,
+          "unit": "rpm",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil pressure",
+          "pgn": "0xFEEF",
+          "bytes": [3],
+          "byte_order": "little_endian",
+          "scale": 0.04,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant temp",
+          "pgn": "0xFEEE",
+          "bytes": [0],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil temp",
+          "pgn": "0xFEEE",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.03125,
+          "offset": -273,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel temp",
+          "pgn": "0xFEEE",
+          "bytes": [1],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant level",
+          "pgn": "0xFEEF",
+          "bytes": [7],
+          "byte_order": "little_endian",
+          "scale": 0.4,
+          "offset": 0,
+          "unit": "%",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total hours",
+          "pgn": "0xFEE5",
+          "bytes": [0,1,2,3],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total HR fuel used",
+          "pgn": "0xFD09",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.001,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total fuel used",
+          "pgn": "0xFEE9",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.5,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel Rate",
+          "pgn": "0xFEF2",
+          "bytes": [0,1],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "l/h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel pressure_Rail",
+          "pgn": "0xFEDB",
+          "bytes": [4,5],
+          "byte_order": "little_endian",
+          "scale": 0.0390625,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel pressure_Low",
+          "pgn": "0xFEDB",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.0390625,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        }
+      ],
+      "dm1_enabled": true 
+    },
+    {
+      "name": "Grove_Primary Engine-J1939",
+      "info_pdf": "config/docs/Engines/Grove_Engine examples.pdf",
+      "matched_crane_models": [
+        "In general all CCS and ECOS cranes from 2011 and newer",
+        "Only engines status."
+      ],
+      "signals": [
+        {
+          "name": "Engine On_RPM<200",
+          "can_id": "0x18F00401",
+          "match_type": "range",
+          "protocol": "j1939",
+          "byte_index": 4,
+          "min_value": "0x06",
+          "max_value": "0xFF"
+        }
+      ],
+      "pgn_channels": [
+        {
+          "label": "Engine RPM",
+          "pgn": "0xF004",
+          "bytes": [3, 4],
+          "byte_order": "little_endian",
+          "scale": 0.125,
+          "offset": 0.0,
+          "unit": "rpm",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil pressure",
+          "pgn": "0xFEEF",
+          "bytes": [3],
+          "byte_order": "little_endian",
+          "scale": 0.04,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant temp",
+          "pgn": "0xFEEE",
+          "bytes": [0],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Oil temp",
+          "pgn": "0xFEEE",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.03125,
+          "offset": -273,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel temp",
+          "pgn": "0xFEEE",
+          "bytes": [1],
+          "byte_order": "little_endian",
+          "scale": 1,
+          "offset": -40,
+          "unit": "°C",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Coolant level",
+          "pgn": "0xFEEF",
+          "bytes": [7],
+          "byte_order": "little_endian",
+          "scale": 0.4,
+          "offset": 0,
+          "unit": "%",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total hours",
+          "pgn": "0xFEE5",
+          "bytes": [0,1,2,3],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total HR fuel used",
+          "pgn": "0xFD09",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.001,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Total fuel used",
+          "pgn": "0xFEE9",
+          "bytes": [4,5,6,7],
+          "byte_order": "little_endian",
+          "scale": 0.5,
+          "offset": 0,
+          "unit": "l",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel Rate",
+          "pgn": "0xFEF2",
+          "bytes": [0,1],
+          "byte_order": "little_endian",
+          "scale": 0.05,
+          "offset": 0,
+          "unit": "l/h",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel pressure_Rail",
+          "pgn": "0xFEDB",
+          "bytes": [4,5],
+          "byte_order": "little_endian",
+          "scale": 0.0390625,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        },
+        {
+          "label": "Engine Fuel pressure_Low",
+          "pgn": "0xFEDB",
+          "bytes": [2,3],
+          "byte_order": "little_endian",
+          "scale": 0.0390625,
+          "offset": 0,
+          "unit": "Bar",
+          "format": "{:.2f}"
+        }
+      ],
+      "dm1_enabled": true 
+    },
+    {
+      "name": "Tadano_Option 1_3-Axle Models- Crane Control (Crane operation ON + LMB override status)",
+      "info_pdf": "config/docs/Tadano/AC3.055_Can1_LMB signal.pdf",
+      "matched_crane_models": [
+        "Tadano AC 3.055-1 from 2022",
+        "Tadano AC60-3 from 2019"
+      ],
+      "signals": [
+        {
+          "name": "Crane operation",
+          "can_id": "0x119",
+          "match_type": "bit",
+          "byte_index": 3,
+          "bit_index": 3,
+          "bit_value": 1
+        },
+        {
+          "name": "LMB override",
+          "can_id": "0x119",
+          "match_type": "bit",
+          "byte_index": 3,
+          "bit_index": 0,
+          "bit_value": 1
+        }
+      ]
+    },
+    {
+      "name": "Tadano_Option 2_5-Axle Models- Crane Control (Crane operation ON + LMB override status)",
+      "info_pdf": "config/docs/Tadano/AC3.055_Can1_LMB signal.pdf",
+      "matched_crane_models": [
+        "Tadano AC 130-5"
+      ],
+      "signals": [
+        {
+          "name": "Crane operation",
+          "can_id": "0x119",
+          "match_type": "bit",
+          "byte_index": 3,
+          "bit_index": 0,
+          "bit_value": 1
+        },
+        {
+          "name": "LMB override",
+          "can_id": "0x119",
+          "match_type": "bit",
+          "byte_index": 3,
+          "bit_index": 2,
+          "bit_value": 1
+        }
+      ]
+    },
+    {
+      "name": "GMK_CCS_from 2018 (LMB override status)",
+      "info_pdf": "config/docs/grove/Grove_CCS_Power board can connection.pdf",
+      "matched_crane_models": [
+        "CCS models in general (newer Grove cranes)",
+        "Grove GMK5250-L from 2018",
+        "Grove GMK4070-L from 2024"
+      ],
+      "signals": [
+        {
+          "name": "LMB override",
+          "can_id": "0x182",
+          "match_type": "bit",
+          "byte_index": 7,
+          "bit_index": 5,
+          "bit_value": 1
+        }
+      ]
+    },
+    {
+      "name": "XCMG option 1_XCA models(Crane status + LMB override status)",
+      "matched_crane_models": [
+        "XCMG XCA130_E from 2026",
+        "XCMG XCA250_G7 from 2026"
+      ],
+      "info_pdf": "config/docs/XCMG/XCMG_250+130_info connection.pdf",
+      "signals": [
+        {
+          "name": "Crane operation ON",
+          "can_id": "0x524",
+          "match_type": "range",
+          "protocol": "CanOpen",
+          "byte_index": 0,
+          "min_value": "0x01",
+          "max_value": "0xFF"
+        },
+        {
+          "name": "LMB override",
+          "can_id": "0x463",
+          "match_type": "bit",
+          "byte_index": 2,
+          "bit_index": 4,
+          "bit_value": 1
+        }
+      ]
+    }
+  ]
+}

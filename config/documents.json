@@ -1,0 +1,60 @@
+{
+  "documents": [
+    {
+      "name": "User manual BB Suivo_Premium general",
+      "pdf_path": "config/docs/documentation/Black box Suivo Premium User Manual.pdf"
+    },
+    {
+      "name": "User manual BB Suivo_Pulse",
+      "pdf_path": "config/docs/documentation/Suivo BB Pulse user manual.pdf"
+    },
+    {
+      "name": "Sartel tool User manual",
+      "pdf_path": "config/docs/documentation/SarTel user manual.pdf"
+    },
+    {
+      "name": "Installation example_Liebherr_LTM+2018",
+      "pdf_path": "config/docs/documentation/Installation example Suivo Premium LTM as from 2018.pdf"
+    },
+    {
+      "name": "Installation example_Liebherr_LR1700-1",
+      "pdf_path": "config/docs/documentation/Installation example Suivo Premium LR 1700_2026.pdf"
+    },
+    {
+      "name": "Installation example_Demag CC2500-1",
+      "pdf_path": "config/docs/documentation/Installation example Suivo Premium CC2500.pdf"
+    },
+    {
+      "name": "Installation example_XCMG_XCA130_E",
+      "pdf_path": "config/docs/documentation/Installation_example_Suivo_Premium_XCMG_XCA_130_E_.pdf"
+    },
+    {
+      "name": "Installation example_XCMG_XCA250_G7",
+      "pdf_path": "config/docs/documentation/Installation_example_Suivo_Premium_XCMG_XCA_250_.pdf"
+    },
+    {
+      "name": "Installation example_Spierings SK1265-AT6 E-Lift",
+      "pdf_path": "config/docs/documentation/Installation_example_Suivo_Premium_Spierings SK1265-AT6 E-Lift.pdf"
+    },
+    {
+      "name": "Installation example_Pulse_Merlo 2026_50.30 ROTO",
+      "pdf_path": "config/docs/documentation/Installation_example_Suivo_Pulse_Merlo-2026_50_30.pdf"
+    },
+    {
+      "name": "BB connection sheet_Premium BB_two BB's installed in one machine_V1",
+      "pdf_path": "config/docs/documentation/D- BB connection sheet_SUIVO_Premium_Double Crane_v2.pdf"
+    },
+    {
+      "name": "BB connection sheet_Pulse_V1",
+      "pdf_path": "config/docs/documentation/D- BB connection sheet_SUIVO Pulse_v2.pdf"
+    },
+    {
+      "name": "BB connection sheet_Premium BB_one BB installed in one machine_V1",
+      "pdf_path": "config/docs/documentation/D- BB connection sheet_SUIVO_Premium_Singel engine_V2.pdf"
+    },
+    {
+      "name": "BB connection sheet_Trailer_V1",
+      "pdf_path": "config/docs/documentation/D- BB connection sheet_SUIVO_Trailer.pdf"
+    }
+  ]
+}

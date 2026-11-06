@@ -1,0 +1,728 @@
+{
+  "sheets": [
+    {
+      "id": "standard_1",
+      "name": "SUIVO extended_Singel engine",
+      "excel_file": "D- BB connection sheet_SUIVO extended_Singel engine.xlsx",
+      "sheet_index": 0,
+      "picture_anchor_cell": "C125",
+      "checkbox_yes_char": "☑",
+      "checkbox_no_char": "☐",
+      "fields": [
+
+        {"label": "General information", "type": "section_title_boxed"},
+
+        {"label": "Crane Number",               "cell": "C10", "type": "text", "required": true},
+        {"label": "Brand and model",            "cell": "F10", "type": "text", "required": true},
+        {"label": "Serial Number Crane",        "cell": "C14", "type": "text", "required": true},
+        {"label": "Technician Name",            "cell": "J12","type": "text", "required": true},
+        {"label": "Date of installation",       "cell": "J10","type": "text", "required": true},
+        {"label": "Maintenance Order (SAP)",    "cell": "L14", "type": "text", "required": true},
+        {"label": "IMEI Number BlackBox",       "cell": "F14", "type": "text", "required": true},
+
+        {"label": "Connection for supplies", "type": "section_title_boxed"},
+
+        {"label": "24v-Battery Supply (Pin 2 BB) Info page schemas",                   "cell": "H49", "type": "text", "required": true},
+        {"label": "24v-Battery Supply (Pin 2 BB)Connector name schemas",               "cell": "J49", "type": "text", "required": true},
+        {"label": "Ground connections (Pin 1+3 BB) Info page schemas",                 "cell": "H51", "type": "text", "required": true},      
+        {"label": "Ground connections (Pin 1+3 BB) Connector name schemas",            "cell": "J51", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Info page schemas",                      "cell": "H55", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Connector name schemas",                 "cell": "J55", "type": "text", "required": true},
+
+        {"label": "Connection for Data collection (Engine running, LMB,...)", "type": "section_title_boxed"},
+
+             {"label": "Connection for Engine running detection", "type": "section_title"},
+        {
+          "label": "Select what applies for the Engine connection",
+          "type": "checkbox_group",
+          "group_id": "Engine_connection",
+          "options": [
+            {
+              "label": "Connected in BB via Din 1-Pin 24 (D+)",
+              "cell": "G71",
+              "sub_questions": [
+                {"label": "D+ info page schemas",                          "cell": "H70", "type": "text", "required": true},
+                {"label": "D+ Connector name schemas",                     "cell": "J70", "type": "text", "required": true},
+                {"label": "Write Voltage value when engine running",       "cell": "L71", "type": "text"}
+              ]
+            },
+            {
+              "label": "Liebherr newer than 2018? (Can 1 BB)",
+              "cell": "G63",
+              "sub_questions": [
+                {"label": "Info Schemas page",                      "cell": "H60", "type": "text", "required": true},
+                {"label": "Connector name for Can H",               "cell": "J63", "type": "text", "required": true},
+                {"label": "Connector name for Can L",               "cell": "J61", "type": "text", "required": true},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L61",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L63",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            },
+            {
+              "label": "Engine CanBus (J1939) Connected (Can 1 BB)",
+              "cell": "G69",
+              "sub_questions": [
+                {"label": "Info Schemas page",       "cell": "H66", "type": "text"},
+                {"label": "Connector name for Can H", "cell": "J67", "type": "text"},
+                {"label": "Connector name for Can L", "cell": "J69", "type": "text"},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L67",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L69",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            }
+          ]
+        },
+
+              {"label": "Connection for US running (telescopic cranes) and LMB", "type": "section_title_boxed"},
+
+        {
+          "label": "Select what applies for US running (telescopic cranes) and SLI",
+          "type": "checkbox_group",
+          "group_id": "US_running_connection",
+          "options": [
+            {
+              "label": "LMB Override_Connected in BB via Din 2-pin 25 BB",
+              "cell": "G77",
+              "sub_questions": [
+                {"label": "LMB Override info page schemas",                       "cell": "H76", "type": "text", "required": true},
+                {"label": "LMB Override Connector name schemas",                  "cell": "J76", "type": "text", "required": true},
+                {"label": "Write Voltage value when engine running",              "cell": "L77", "type": "text"}
+              ]
+            },
+            {
+              "label": "US running_Connected in BB via Din 4-pin 28",
+              "cell": "G86",
+              "sub_questions": [
+                {"label": "US running info page schemas",                       "cell": "H84", "type": "text", "required": true},
+                {"label": "US running Connector name schemas",                  "cell": "J84", "type": "text", "required": true},
+                {"label": "Write Voltage value when engine running",              "cell": "L84", "type": "text"}
+              ]
+            },
+            {
+              "label": "Crane control CanBus Connected - For LMB and Crane operation (Can 2 BB)",
+              "cell": "G74",
+              "sub_questions": [
+                {"label": "Info Schemas page",       "cell": "H72", "type": "text"},
+                {"label": "Connector name for Can H", "cell": "J73", "type": "text"},
+                {"label": "Connector name for Can L", "cell": "J75", "type": "text"},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L73",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L75",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            }
+          ]
+        },
+
+        {"label": "Crawler movement Connected in BB via Din 3-pin 27 BB", "type": "section_title_boxed"},
+
+        {"label": "Crawler input Info page schemas",                                         "cell": "H82", "type": "text", "required": false},
+        {"label": "Crawler input Connector name schemas",                                    "cell": "J82", "type": "text", "required": false},
+        {"label": "Write Voltage value when crawler movement active",                        "cell": "L83", "type": "text"},  
+
+        {"label": "Information working hours", "type": "section_title_boxed"},
+
+        {"label": "Note working hours Primary engine/Lower Engine",                "cell": "I90", "type": "text", "required": true},
+        {"label": "Note working hours Upper structure/Upper Engine",               "cell": "I92", "type": "text", "required": true},
+        {"label": "Note working hours Crawler or Odometer reading",                "cell": "I94", "type": "text", "required": false},
+        {"label": "Specify position of the BB in the crane",                       "cell": "I95", "type": "text", "required": true},
+
+        
+        
+        {"label": "Checklist for pictures", "type": "section_title_boxed"},
+        
+        {
+          "label": "Has a picture from the IMEI sticked been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J97",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C110"
+        },
+        {
+          "label": "Has a picture from the BB location been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J98",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C111"
+        },
+        {
+          "label": "Has a picture from the Can1 connection been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J99",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C112"
+        },
+        {
+          "label": "Has a picture from the Can1 connection been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J100",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C113"
+        },
+        {
+          "label": "Has a picture from the Engine Id plate been taken and uploaded?",
+          "type": "conditional",
+          "required": false,
+          "checkbox_cell": "J101"
+        },
+        {"label": "Notes / Comments",       "cell": "C114", "type": "multiline"}
+      ]
+    },
+    {
+      "id": "standard_2",
+      "name": "SUIVO extended_Double 2x installed in one crane",
+      "excel_file": "D- BB connection sheet_SUIVO extended_Double Crane BB.xlsx",
+      "sheet_index": 0,
+      "picture_anchor_cell": "C155",
+      "checkbox_yes_char": "☑",
+      "checkbox_no_char": "☐",
+      "fields": [
+
+        {"label": "General information", "type": "section_title_boxed"},
+
+        {"label":                    "Crane Number",       "cell": "C10", "type": "text", "required": true},
+        {"label":                 "Brand and model",       "cell": "F10", "type": "text", "required": true},
+        {"label":             "Serial Number Crane",       "cell": "C14", "type": "text", "required": true},
+        {"label":                 "Technician Name",       "cell": "J12", "type": "text", "required": true},
+        {"label":            "Date of installation",       "cell": "J10", "type": "text", "required": true},
+        {"label":         "Maintenance Order (SAP)",       "cell": "L14", "type": "text", "required": true},
+        {"label": "IMEI Number BlackBox_Extended 1",       "cell": "F14", "type": "text", "required": true},
+        {"label": "IMEI Number BlackBox_Extended 2",       "cell": "F16", "type": "text", "required": true},
+
+        {"label": "Type of installation for BB_1 and BB_2", "type": "section_title_boxed"},
+        {
+          "label": "Select what applies for BB_Nr1",
+          "type": "checkbox_group",
+          "group_id": "type1_connection",
+          "options": [
+            {
+              "label": "Primary Engine",
+              "cell": "H50"
+            },
+            {
+              "label": "Engine 1_LBC",
+              "cell": "H51"
+            }
+          ]
+        },
+        {
+          "label": "Select what applies for BB_Nr2",
+          "type": "checkbox_group",
+          "group_id": "type2_connection",
+          "options": [
+            {
+              "label": "Upper structure/upper engine",
+              "cell": "M50"
+            },
+            {
+              "label": "Engine 2_LBC",
+              "cell": "M51"
+            }
+          ]
+        },
+
+        {"label": "Connection for supplies_Black box nr. 1", "type": "section_title_boxed"},
+
+        {"label": "24v-Battery Supply (Pin 2 BB) Info page schemas",                   "cell": "H56", "type": "text", "required": true},
+        {"label": "24v-Battery Supply (Pin 2 BB)Connector name schemas",               "cell": "J56", "type": "text", "required": true},
+        {"label": "Ground connections (Pin 1+3 BB) Info page schemas",                 "cell": "H58", "type": "text", "required": true},      
+        {"label": "Ground connections (Pin 1+3 BB) Connector name schemas",            "cell": "J58", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Info page schemas",                      "cell": "H62", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Connector name schemas",                 "cell": "J62", "type": "text", "required": true},
+
+        {"label": "Connection for supplies_Black box nr. 2", "type": "section_title_boxed"},
+
+        {"label": "24v-Battery Supply (Pin 2 BB) Info page schemas",                   "cell": "H67", "type": "text", "required": true},
+        {"label": "24v-Battery Supply (Pin 2 BB)Connector name schemas",               "cell": "J67", "type": "text", "required": true},
+        {"label": "Ground connections (Pin 1+3 BB) Info page schemas",                 "cell": "H69", "type": "text", "required": true},      
+        {"label": "Ground connections (Pin 1+3 BB) Connector name schemas",            "cell": "J69", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Info page schemas",                      "cell": "H73", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Connector name schemas",                 "cell": "J73", "type": "text", "required": true},
+
+        {"label": "Connection for Data collection_BB Nr. 1 (Carrier_Only Engine running)", "type": "section_title_boxed"},
+
+             {"label": "Connection for Engine running detection", "type": "section_title"},
+        {
+          "label": "Select what applies for the Engine connection",
+          "type": "checkbox_group",
+          "group_id": "Engine_connection",
+          "options": [
+            {
+              "label": "Connected in BB via Din 1-Pin 24(D+)",
+              "cell": "G90",
+              "sub_questions": [
+                {"label": "D+ info page schemas",                          "cell": "H89", "type": "text", "required": true},
+                {"label": "D+ Connector name schemas",                     "cell": "J89", "type": "text", "required": true},
+                {"label": "Write Voltage value when engine running",       "cell": "L90", "type": "text"}
+              ]
+            },
+            {
+              "label": "Liebherr newer than 2018? (Can 1 BB nr.1)",
+              "cell": "G83",
+              "sub_questions": [
+                {"label": "Info Schemas page",                      "cell": "H79", "type": "text", "required": true},
+                {"label": "Connector name for Can H",               "cell": "J80", "type": "text", "required": true},
+                {"label": "Connector name for Can L",               "cell": "J82", "type": "text", "required": true},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L80",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L82",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            },
+            {
+              "label": "Engine CanBus (J1939) Connected (Can 1 BB nr.1)",
+              "cell": "G87",
+              "sub_questions": [
+                {"label": "Info Schemas page",        "cell": "H85", "type": "text"},
+                {"label": "Connector name for Can H", "cell": "J86", "type": "text"},
+                {"label": "Connector name for Can L", "cell": "J88", "type": "text"},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L86",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L88",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            }
+          ]
+        },
+
+        {"label": "Connection for Data collection_BB Nr. 2 (Upper Engine/ Upper structure/ Engine 2/ LMB signal/ Crawler)", "type": "section_title_boxed"},
+
+             {"label": "Connection for upper structure WHEN FITTED WITH AN ENGINE", "type": "section_title"},
+        {
+          "label": "Select what applies for the Engine running detection",
+          "type": "checkbox_group",
+          "group_id": "Engine_BB2_connection",
+          "options": [
+            {
+              "label": "Connected via in BB via Din 1-Pin24 (D+)",
+              "cell": "G105",
+              "sub_questions": [
+                {"label": "D+ info page schemas",                          "cell": "H104", "type": "text", "required": true},
+                {"label": "D+ Connector name schemas",                     "cell": "J104", "type": "text", "required": true},
+                {"label": "Write Voltage value when engine running",       "cell": "L105", "type": "text"}
+              ]
+            },
+            {
+              "label": "Liebherr newer than 2018? (Can 1 BB nr.1)",
+              "cell": "G98",
+              "sub_questions": [
+                {"label": "Info Schemas page",                      "cell": "H94", "type": "text", "required": true},
+                {"label": "Connector name for Can H",               "cell": "J95", "type": "text", "required": true},
+                {"label": "Connector name for Can L",               "cell": "J97", "type": "text", "required": true},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L95",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L97",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            },
+            {
+              "label": "Engine CanBus (J1939) Connected - Only Engine ON(Can 1 in BB nr.2)",
+              "cell": "G102",
+              "sub_questions": [
+                {"label": "Info Schemas page",        "cell": "H100", "type": "text"},
+                {"label": "Connector name for Can H", "cell": "J101", "type": "text"},
+                {"label": "Connector name for Can L", "cell": "J103", "type": "text"},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L101",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L103",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            }
+          ]
+        },
+
+              {"label": "Connection for Upper structure when NO ENGINE FITTED (telescopic cranes) and LMB signal", "type": "section_title"},
+
+        {
+          "label": "Select what applies for US running (telescopic cranes) and SLI",
+          "type": "checkbox_group",
+          "group_id": "US_running_connection",
+          "options": [
+            {
+              "label": "LMB Override_Connected in BB via Din 2-pin 25 BB",
+              "cell": "G111",
+              "sub_questions": [
+                {"label": "LMB Override info page schemas",                       "cell": "H110", "type": "text"},
+                {"label": "LMB Override Connector name schemas",                  "cell": "J110", "type": "text"},
+                {"label": "Write Voltage value when engine running",              "cell": "L111", "type": "text"}
+              ]
+            },
+            {
+              "label": "US running_Connected in BB via a Din 4-pin 28 BB",
+              "cell": "G118",
+              "sub_questions": [
+                {"label": "US running info page schemas",                       "cell": "H116", "type": "text"},
+                {"label": "US running Connector name schemas",                  "cell": "J116", "type": "text"},
+                {"label": "Write Voltage value when engine running",            "cell": "L116", "type": "text"}
+              ]
+            },
+            {
+              "label": "Crane control CanBus Connected - For LMB and Crane operation (Can 2 BB)",
+              "cell": "G108",
+              "sub_questions": [
+                {"label": "Info Schemas page",       "cell": "H106", "type": "text"},
+                {"label": "Connector name for Can H", "cell": "J107", "type": "text"},
+                {"label": "Connector name for Can L", "cell": "J109", "type": "text"},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L107",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note configuration selected",
+                  "cell": "L109",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            }
+          ]
+        },
+
+        {"label": "Connection to detect crawler movement - Only via Din3-Pin 27 on BB Nr.2", "type": "section_title"},
+
+        {
+          "label": "Crawler movement",
+          "type": "checkbox_group",
+          "group_id": "Crawler_cranes",
+          "options": [
+            {
+              "label": "Select to fill details connection",
+              "cell": "G115",
+              "sub_questions": [
+                {"label": "info page schemas",                                    "cell": "H114", "type": "text"},
+                {"label": "Connector name schemas",                               "cell": "J114", "type": "text"},
+                {"label": "Write Voltage value when Crawler active",              "cell": "L115", "type": "text"}
+              ]
+            }
+          ]
+        },
+
+
+
+
+        {"label": "Information working hours", "type": "section_title_boxed"},
+
+        {"label": "Note working hours Primary engine/Lower Engine",                "cell": "I122", "type": "text", "required": true},
+        {"label": "Note working hours Upper structure/Uppen Engine",               "cell": "I124", "type": "text", "required": true},
+        {"label": "Note working hours Crawler or odometer reading",                "cell": "I128", "type": "text", "required": false},
+        {"label": "Specify position of the BB Nr.1 in the crane",                  "cell": "I126", "type": "text", "required": true},
+        {"label": "Specify position of the BB Nr.2 in the crane",                  "cell": "I127", "type": "text", "required": true},
+
+        
+        
+        {"label": "Checklist for pictures", "type": "section_title_boxed"},
+        
+        {
+          "label": "Has a picture from the IMEI sticker of BB Nr.1 been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J130",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C110"
+        },
+        {
+          "label": "Has a picture from the IMEI sticker of BB Nr.2 been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "M130",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "L142"
+        },
+        {
+          "label": "Has a picture from the BB Nr.1 location been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J131",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C143"
+        },
+        {
+          "label": "Has a picture from the BB Nr.2 location been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "M131",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "L143"
+        },
+        {
+          "label": "Has a picture from the Can1 BB Nr.1 connection been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J132",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C144"
+        },
+        {
+          "label": "Has a picture from the Can1 BB Nr.2 connection been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "M132",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "L144"
+        },
+        {
+          "label": "Has a picture from the Can2 BB Nr.2 connection been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "M133",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "L145"
+        },
+        {
+          "label": "Has a picture from the Engine Nr.1 Id plate been taken and uploaded?",
+          "type": "conditional",
+          "required": false,
+          "checkbox_cell": "J134"
+        },
+        {
+          "label": "Has a picture from the Engine Nr.2 Id plate been taken and uploaded?",
+          "type": "conditional",
+          "required": false,
+          "checkbox_cell": "M134"
+        },
+        {"label": "Notes / Comments",       "cell": "C147", "type": "multiline"}
+      ]
+    },
+    {
+      "id": "standard_3",
+      "name": "SUIVO Pulse_MHE",
+      "excel_file": "D- BB connection sheet_SUIVO Pulse.xlsx",
+      "sheet_index": 0,
+      "picture_anchor_cell": "C95",
+      "checkbox_yes_char": "☑",
+      "checkbox_no_char": "☐",
+      "fields": [
+
+        {"label": "General information", "type": "section_title_boxed"},
+
+        {"label": "Crane Number",               "cell": "C10", "type": "text", "required": true},
+        {"label": "Brand and model",            "cell": "F10", "type": "text", "required": true},
+        {"label": "Serial Number Crane",        "cell": "C14", "type": "text", "required": true},
+        {"label": "Technician Name",            "cell": "J12", "type": "text", "required": true},
+        {"label": "Date of installation",       "cell": "J10", "type": "text", "required": true},
+        {"label": "Maintenance Order (SAP)",    "cell": "L14", "type": "text", "required": true},
+        {"label": "IMEI Number BlackBox",       "cell": "F14", "type": "text", "required": true},
+
+        {"label": "Connection for supplies", "type": "section_title_boxed"},
+
+        {"label": "24v-Battery Supply (Pin 2 BB) Info page schemas",                   "cell": "H48", "type": "text", "required": true},
+        {"label": "24v-Battery Supply (Pin 2 BB)Connector name schemas",               "cell": "J48", "type": "text", "required": true},
+        {"label": "Ground connections (Pin 1+3 BB) Info page schemas",                 "cell": "H50", "type": "text", "required": true},      
+        {"label": "Ground connections (Pin 1+3 BB) Connector name schemas",            "cell": "J50", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Info page schemas",                      "cell": "H52", "type": "text", "required": true},
+        {"label": "Ignition Supply (Pin 4 BB) Connector name schemas",                 "cell": "J52", "type": "text", "required": true},
+
+        {"label": "Connection for Data collection-Engine running", "type": "section_title_boxed"},
+
+        {
+          "label": "Only if engine CanBus-J1939-is connected",
+          "type": "checkbox_group",
+          "group_id": "Engine_connection_PULSE_CAN",
+          "options": [
+            {
+              "label": "OPTIONAL - Engine CanBus (J1939) Connected (Cable White/Green BB)",
+              "cell": "G58",
+              "sub_questions": [
+                {"label": "Info Schemas page",                "cell": "H56", "type": "text"},
+                {"label": "Connector name for Can H - White", "cell": "J57", "type": "text"},
+                {"label": "Connector name for Can L - Green", "cell": "J59", "type": "text"},
+                {
+                  "label": "Note Baudrate ",
+                  "cell": "L57",
+                  "type": "auto_fill",
+                  "auto_source": "baudrate"
+                },
+                {
+                  "label": "Note SarTel configuration selected",
+                  "cell": "L59",
+                  "type": "auto_fill",
+                  "auto_source": "config_name"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "label": "D+ signal",
+          "type": "checkbox_group",
+          "group_id": "Engine running connection_PULSE_D+",
+          "options": [
+            {
+              "label": "REQUIRED_Connected in BB via Din 1 on Pin D, Brown",
+              "cell": "G60",
+              "sub_questions": [
+                {"label": "D+ info page schemas",                          "cell": "H60", "type": "text", "required": true},
+                {"label": "D+ Connector name schemas",                     "cell": "J60", "type": "text", "required": true},
+                {"label": "Write Voltage value when engine running",       "cell": "L60", "type": "text"}
+              ]
+            }
+          ]
+        },
+
+        {"label": "Information working hours", "type": "section_title"},
+
+        {"label": "Note Odometer reading if applies",                              "cell": "J66", "type": "text", "required": true},
+        {"label": "Note working hours Primary engine",                             "cell": "J67", "type": "text", "required": true},
+        {"label": "Specify position of the BB in the machine",                     "cell": "J70", "type": "text", "required": true},
+
+        {"label": "Checklist for pictures", "type": "section_title"},
+        
+        {
+          "label": "Has a picture from the IMEI sticker of BB been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J72",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C84"
+        },
+        {
+          "label": "Has a picture from the location of BB been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J73",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C85"
+        },
+        {
+          "label": "Has a picture from the BB Nr.1 location been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J74",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C86"
+        },
+        {
+          "label": "Has a picture from the Engine plate been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J75",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C87"
+        },
+
+        {"label": "Notes / Comments",       "cell": "C88", "type": "multiline"}
+      ]
+    },
+    {
+      "id": "standard_4",
+      "name": "SUIVO Trailer",
+      "excel_file": "D- BB connection sheet_SUIVO Trailer.xlsx",
+      "sheet_index": 0,
+      "picture_anchor_cell": "C123",
+      "checkbox_yes_char": "☑",
+      "checkbox_no_char": "☐",
+      "fields": [
+
+        {"label": "General information", "type": "section_title_boxed"},
+
+        {"label": "Crane Number",               "cell": "C10", "type": "text", "required": true},
+        {"label": "Brand and model",            "cell": "F10", "type": "text", "required": true},
+        {"label": "Serial Number Crane",        "cell": "C14", "type": "text", "required": true},
+        {"label": "Technician Name",            "cell": "J12", "type": "text", "required": true},
+        {"label": "Date of installation",       "cell": "J10", "type": "text", "required": true},
+        {"label": "Maintenance Order (SAP)",    "cell": "L14", "type": "text", "required": true},
+        {"label": "IMEI Number BlackBox",       "cell": "F14", "type": "text", "required": true},
+
+        {"label": "Connection for supplies", "type": "section_title_boxed"},
+
+        {"label": "24v-Battery Supply (Pin 2 BB) Info page schemas",                                              "cell": "H48", "type": "text", "required": true},
+        {"label": "24v-Battery Supply (Pin 2 BB)Connector name schemas",                                          "cell": "J48", "type": "text", "required": true},
+        {"label": "Ground connections (Pin 1 BB) Info page schemas",                                              "cell": "H50", "type": "text", "required": true},      
+        {"label": "Ground connections (Pin 1 BB) Connector name schemas",                                         "cell": "J50", "type": "text", "required": true},
+        {"label": "Trailer connected - same as battery supply (Pin 4 BB) Info page schemas",                      "cell": "H52", "type": "text", "required": true},
+        {"label": "Trailer connected - same as battery supply(Pin 4 BB) Connector name schemas",                  "cell": "J52", "type": "text", "required": true},
+
+
+
+
+        {"label": "Information working hours", "type": "section_title"},
+
+        {"label": "Note working hours trailer - if available",                     "cell": "H61", "type": "text", "required": true},
+        {"label": "Specify position of the BB in the trailer",                     "cell": "H64", "type": "text", "required": true},
+
+        {"label": "Checklist for pictures", "type": "section_title"},
+        
+        {
+          "label": "Has a picture from the IMEI sticker of BB been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J66",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C84"
+        },
+        {
+          "label": "Has a picture from the location of BB been taken and uploaded?",
+          "type": "conditional",
+          "required": true,
+          "checkbox_cell": "J67",
+          "no_text_label": "Reason for Non taken the picture",
+          "no_text_cell": "C85"
+        }
+      ]
+    }
+  ]
+}
