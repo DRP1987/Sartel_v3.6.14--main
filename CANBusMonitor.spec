@@ -43,6 +43,7 @@ datas = [
     ('assets/logo1.png', 'assets'),
     ('assets/icon.png', 'assets'),
     ('assets/icon.ico', 'assets'),
+    ('assets/cato_root_ca.pem', 'assets'),
 ]
 
 # Collect python-can data files
