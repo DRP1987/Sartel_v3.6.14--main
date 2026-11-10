@@ -20,6 +20,7 @@ The updater:
 
 import os
 import sys
+import uuid
 import hashlib
 import tempfile
 import subprocess
@@ -32,6 +33,56 @@ from config.app_config import APP_VERSION, VERSION_MANIFEST_URL
 from utils.resource_path import resource_path
 
 CHECK_TIMEOUT = 5  # seconds for version check request
+
+_update_cache_dir_cache = None  # cached path to the writable update-staging directory
+
+
+def get_update_cache_dir():
+    """
+    Return a writable directory for staging downloaded update files.
+
+    Corporate antivirus/EDR software (e.g. Windows Defender with
+    cloud-delivered protection or Controlled Folder Access) often treats
+    unsigned executables freshly downloaded into the generic system
+    %TEMP% folder as suspicious, quarantining or deleting them -- which
+    then surfaces as a confusing "Windows cannot access the specified
+    device, path, or file" error when the app (or the user) tries to
+    open them.
+
+    To reduce that risk and give IT a narrower, safer location to
+    exclude, we prefer a dedicated per-machine folder under
+    %ProgramData%, falling back to %LOCALAPPDATA% (per-user, almost
+    always writable) and finally to the system temp folder if neither
+    is usable.
+    """
+    global _update_cache_dir_cache
+    if _update_cache_dir_cache and os.path.isdir(_update_cache_dir_cache):
+        return _update_cache_dir_cache
+
+    candidates = []
+    program_data = os.environ.get("PROGRAMDATA")
+    if program_data:
+        candidates.append(os.path.join(program_data, "SarTel", "update_cache"))
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        candidates.append(os.path.join(local_app_data, "SarTel", "update_cache"))
+    candidates.append(os.path.join(tempfile.gettempdir(), "SarTel_update_cache"))
+
+    for candidate in candidates:
+        try:
+            os.makedirs(candidate, exist_ok=True)
+            probe_path = os.path.join(candidate, ".write_test")
+            with open(probe_path, "w") as f:
+                f.write("ok")
+            os.remove(probe_path)
+            _update_cache_dir_cache = candidate
+            return candidate
+        except Exception:
+            continue
+
+    # Last resort: original behavior.
+    _update_cache_dir_cache = tempfile.gettempdir()
+    return _update_cache_dir_cache
 
 # Some corporate networks/VPNs (e.g. Cato Networks SASE) perform TLS/SSL
 # inspection, which re-signs HTTPS traffic with a private root CA. Standard
@@ -74,8 +125,8 @@ def _get_ca_bundle():
         with open(corp_cert_path, "r", encoding="utf-8") as f:
             corp_cert = f.read()
 
-        combined_fd, combined_path = tempfile.mkstemp(suffix=".pem", prefix="SarTel_ca_bundle_")
-        with os.fdopen(combined_fd, "w", encoding="utf-8") as f:
+        combined_path = os.path.join(get_update_cache_dir(), "ca_bundle.pem")
+        with open(combined_path, "w", encoding="utf-8") as f:
             f.write(default_bundle)
             f.write("\n")
             f.write(corp_cert)
@@ -137,10 +188,11 @@ def download_update(download_url, checksum_sha256=None, progress_callback=None):
         total = int(resp.headers.get("content-length", 0))
         downloaded = 0
 
-        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".zip", prefix="SarTel_update_")
+        cache_dir = get_update_cache_dir()
+        tmp_path = os.path.join(cache_dir, f"SarTel_update_{uuid.uuid4().hex}.zip")
         sha = hashlib.sha256()
 
-        with os.fdopen(tmp_fd, "wb") as f:
+        with open(tmp_path, "wb") as f:
             for chunk in resp.iter_content(chunk_size=65536):
                 if chunk:
                     f.write(chunk)
