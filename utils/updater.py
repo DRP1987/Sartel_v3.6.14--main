@@ -26,10 +26,66 @@ import subprocess
 import zipfile
 import shutil
 import requests
+import certifi
 from packaging import version as pkg_version
 from config.app_config import APP_VERSION, VERSION_MANIFEST_URL
+from utils.resource_path import resource_path
 
 CHECK_TIMEOUT = 5  # seconds for version check request
+
+# Some corporate networks/VPNs (e.g. Cato Networks SASE) perform TLS/SSL
+# inspection, which re-signs HTTPS traffic with a private root CA. Standard
+# certificate verification then fails with
+# "SSLCertVerificationError: self-signed certificate in certificate chain".
+#
+# Rather than disabling verification (verify=False), we extend the trusted
+# CA bundle with that corporate root CA, so requests to GitHub still get
+# verified -- just against a trust store that also recognizes the
+# corporate proxy's certificate. Verification is never skipped: if the
+# corporate cert is missing, we fall back to certifi's standard bundle.
+CORP_CA_RELATIVE_PATH = "assets/cato_root_ca.pem"
+
+_ca_bundle_cache = None  # cached path to the combined CA bundle for this process
+
+
+def _get_ca_bundle():
+    """
+    Build (and cache) a CA bundle combining certifi's standard trusted roots
+    with the corporate Cato Networks Root CA used by some networks' SSL
+    inspection.
+
+    Returns:
+        Path to a PEM file to pass as `verify=` to requests. Falls back to
+        certifi's default bundle if the corporate cert file isn't found or
+        if building the combined bundle fails for any reason.
+    """
+    global _ca_bundle_cache
+    if _ca_bundle_cache and os.path.exists(_ca_bundle_cache):
+        return _ca_bundle_cache
+
+    corp_cert_path = resource_path(CORP_CA_RELATIVE_PATH)
+    if not os.path.exists(corp_cert_path):
+        print(f"[Updater] Corporate CA cert not found at {corp_cert_path}; using default certificate verification.")
+        return certifi.where()
+
+    try:
+        with open(certifi.where(), "r", encoding="utf-8") as f:
+            default_bundle = f.read()
+        with open(corp_cert_path, "r", encoding="utf-8") as f:
+            corp_cert = f.read()
+
+        combined_fd, combined_path = tempfile.mkstemp(suffix=".pem", prefix="SarTel_ca_bundle_")
+        with os.fdopen(combined_fd, "w", encoding="utf-8") as f:
+            f.write(default_bundle)
+            f.write("\n")
+            f.write(corp_cert)
+
+        _ca_bundle_cache = combined_path
+        return combined_path
+    except Exception as e:
+        print(f"[Updater] Failed to build combined CA bundle: {e}. Falling back to default certificate verification.")
+        return certifi.where()
+
 
 def get_install_dir():
     """
@@ -51,7 +107,7 @@ def check_for_update():
         or None if no update available or network error.
     """
     try:
-        resp = requests.get(VERSION_MANIFEST_URL, timeout=CHECK_TIMEOUT)
+        resp = requests.get(VERSION_MANIFEST_URL, timeout=CHECK_TIMEOUT, verify=_get_ca_bundle())
         resp.raise_for_status()
         manifest = resp.json()
         latest = manifest.get("latest_version", "0.0.0")
@@ -75,7 +131,7 @@ def download_update(download_url, checksum_sha256=None, progress_callback=None):
         Local filesystem path to the downloaded .zip, or None on failure.
     """
     try:
-        resp = requests.get(download_url, stream=True, timeout=120)
+        resp = requests.get(download_url, stream=True, timeout=120, verify=_get_ca_bundle())
         resp.raise_for_status()
 
         total = int(resp.headers.get("content-length", 0))
