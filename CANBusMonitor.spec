@@ -25,6 +25,7 @@ hiddenimports = [
     'uuid',
     'packaging',
     'packaging.version',
+    'truststore',
 ]
 
 hiddenimports += collect_submodules('can.interfaces')

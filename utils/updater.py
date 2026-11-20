@@ -87,14 +87,52 @@ def get_update_cache_dir():
 # Some corporate networks/VPNs (e.g. Cato Networks SASE) perform TLS/SSL
 # inspection, which re-signs HTTPS traffic with a private root CA. Standard
 # certificate verification then fails with
-# "SSLCertVerificationError: self-signed certificate in certificate chain".
+# "SSLCertVerificationError: self-signed certificate in certificate chain",
+# because certifi's bundled CA list has no idea about that private root CA.
 #
-# Rather than disabling verification (verify=False), we extend the trusted
-# CA bundle with that corporate root CA, so requests to GitHub still get
-# verified -- just against a trust store that also recognizes the
-# corporate proxy's certificate. Verification is never skipped: if the
-# corporate cert is missing, we fall back to certifi's standard bundle.
+# IT departments that deploy this kind of SSL inspection almost always also
+# push the inspection root CA into the machine's OS certificate store (e.g.
+# Windows' "Trusted Root Certification Authorities"), since that's what makes
+# browsers and other OS-integrated software work transparently through the
+# VPN. We take advantage of that by asking Python's `ssl` module to trust
+# whatever the OS trusts, via the `truststore` package, instead of relying
+# solely on our own bundled CA list. This way the update check keeps working
+# even if the corporate VPN's inspection CA is rotated/renewed, with no need
+# to maintain or ship a copy of it ourselves -- and verification is never
+# skipped, it is just checked against a trust store that matches the OS.
+#
+# As a secondary fallback (e.g. if `truststore` isn't available, or the OS
+# store doesn't have the cert for some reason), we also extend certifi's
+# bundle with a static copy of the corporate root CA shipped alongside the
+# app.
 CORP_CA_RELATIVE_PATH = "assets/cato_root_ca.pem"
+
+_truststore_injected = False  # whether truststore has patched the ssl module for this process
+
+
+def _ensure_truststore_injected():
+    """
+    Patch Python's ssl module (once per process) so TLS verification uses
+    the OS-native certificate store (Windows CryptoAPI / macOS Security
+    framework / OpenSSL on Linux) in addition to certifi's bundle.
+
+    This makes requests to GitHub succeed on corporate networks whose IT
+    department has installed an SSL-inspection root CA (e.g. Cato Networks)
+    into the OS trust store, without us needing to track or hardcode that
+    CA ourselves.
+    """
+    global _truststore_injected
+    if _truststore_injected:
+        return True
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+        _truststore_injected = True
+        return True
+    except Exception as e:
+        print(f"[Updater] truststore unavailable ({e}); falling back to bundled certificate verification.")
+        return False
+
 
 _ca_bundle_cache = None  # cached path to the combined CA bundle for this process
 
@@ -104,6 +142,11 @@ def _get_ca_bundle():
     Build (and cache) a CA bundle combining certifi's standard trusted roots
     with the corporate Cato Networks Root CA used by some networks' SSL
     inspection.
+
+    This is used as a fallback `verify=` value for `requests` calls. When
+    `truststore` is successfully injected (see `_ensure_truststore_injected`),
+    Python's ssl module already trusts the OS store directly, so this bundle
+    mainly matters if truststore is unavailable.
 
     Returns:
         Path to a PEM file to pass as `verify=` to requests. Falls back to
@@ -138,6 +181,21 @@ def _get_ca_bundle():
         return certifi.where()
 
 
+def _get_request_verify():
+    """
+    Return the value to pass as `verify=` to `requests` calls.
+
+    Prefers letting the OS-native certificate store validate the chain (via
+    `truststore`), since that's what corporate VPNs/SSL-inspection proxies
+    rely on. Falls back to a certifi+corporate-CA combined bundle otherwise.
+    """
+    if _ensure_truststore_injected():
+        # truststore patches ssl.SSLContext globally; requests/urllib3 will
+        # use the OS trust store as long as verify is left as a plain bool.
+        return True
+    return _get_ca_bundle()
+
+
 def get_install_dir():
     """
     Return the directory that contains CANBusMonitor.exe.
@@ -158,7 +216,7 @@ def check_for_update():
         or None if no update available or network error.
     """
     try:
-        resp = requests.get(VERSION_MANIFEST_URL, timeout=CHECK_TIMEOUT, verify=_get_ca_bundle())
+        resp = requests.get(VERSION_MANIFEST_URL, timeout=CHECK_TIMEOUT, verify=_get_request_verify())
         resp.raise_for_status()
         manifest = resp.json()
         latest = manifest.get("latest_version", "0.0.0")
@@ -182,7 +240,7 @@ def download_update(download_url, checksum_sha256=None, progress_callback=None):
         Local filesystem path to the downloaded .zip, or None on failure.
     """
     try:
-        resp = requests.get(download_url, stream=True, timeout=120, verify=_get_ca_bundle())
+        resp = requests.get(download_url, stream=True, timeout=120, verify=_get_request_verify())
         resp.raise_for_status()
 
         total = int(resp.headers.get("content-length", 0))
