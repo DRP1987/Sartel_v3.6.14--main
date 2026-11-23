@@ -10,6 +10,7 @@ from PyQt5.QtGui import QTextCursor
 from datetime import datetime
 from typing import Dict, Any, List, Set, Optional
 import csv
+import time
 from gui.widgets import SignalStatusWidget, ConnectionStatusWidget
 from gui.utils import create_logo_widget
 from gui.installation_sheet_dialog import InstallationSheetDialog
@@ -104,6 +105,15 @@ class MonitoringScreen(QWidget):
         self.dm1_status_label = None
         # Per-source DM1 data: {source_addr: decoded_dict} - keyed by SA (0x00-0xFF)
         self.dm1_data_by_source: Dict[int, dict] = {}
+
+        # Manual double-click tracking for the DTC table. Some environments
+        # (RDP sessions, certain mice/trackpads, odd OS double-click-speed
+        # settings) fail to generate a native double-click event, so
+        # cellDoubleClicked never fires even though two separate single
+        # clicks are registered. We track the last clicked cell/time
+        # ourselves as a reliable fallback (see _on_dtc_cell_clicked).
+        self._dtc_last_click_cell: Optional[tuple] = None
+        self._dtc_last_click_time: float = 0.0
 
         # DM1 lamp flash support: tracks which lamps are in "Flash" state and the
         # current on/off toggle so the icon alternates every 500 ms.
@@ -558,7 +568,12 @@ class MonitoringScreen(QWidget):
 
         # Double-clicking a cell opens a dialog with the full, unclipped text —
         # needed because long FMI/Error descriptions don't fit in the column width.
+        # We rely on cellClicked + manual timing (_on_dtc_cell_clicked) rather than
+        # cellDoubleClicked alone: some environments (RDP, certain mice/trackpads,
+        # OS double-click-speed settings) never emit a native double-click event,
+        # so cellDoubleClicked silently never fires even though single clicks work.
         self.dm1_dtc_table.cellDoubleClicked.connect(self._show_dtc_cell_detail)
+        self.dm1_dtc_table.cellClicked.connect(self._on_dtc_cell_clicked)
 
         outer_layout.addWidget(self.dm1_dtc_table)
 
@@ -681,6 +696,33 @@ class MonitoringScreen(QWidget):
                 self.dm1_dtc_table.setItem(row, 2, QTableWidgetItem(str(dtc['fmi'])))
                 self.dm1_dtc_table.setItem(row, 3, QTableWidgetItem(dtc['fmi_desc']))
                 self.dm1_dtc_table.setItem(row, 4, QTableWidgetItem(dtc.get('error_desc', 'Unknown')))
+
+    def _on_dtc_cell_clicked(self, row: int, column: int) -> None:
+        """
+        Manual double-click fallback for the DTC table.
+
+        Some environments (RDP/remote sessions, certain mice/trackpads, or
+        unusual OS double-click-speed settings) never generate a native
+        double-click event even though two separate single clicks are
+        registered fine, which silently breaks cellDoubleClicked. To make
+        the "view full description" feature reliable everywhere, we track
+        the last-clicked cell and timestamp ourselves and treat two clicks
+        on the same cell within 500 ms as a double-click.
+
+        Args:
+            row: Row index of the clicked cell.
+            column: Column index of the clicked cell.
+        """
+        now = time.monotonic()
+        cell = (row, column)
+        if (self._dtc_last_click_cell == cell
+                and (now - self._dtc_last_click_time) <= 0.5):
+            self._dtc_last_click_cell = None
+            self._dtc_last_click_time = 0.0
+            self._show_dtc_cell_detail(row, column)
+        else:
+            self._dtc_last_click_cell = cell
+            self._dtc_last_click_time = now
 
     def _show_dtc_cell_detail(self, row: int, column: int) -> None:
         """
