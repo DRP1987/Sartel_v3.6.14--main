@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QTabWidget, QTextEdit,
                              QScrollArea, QPushButton, QHBoxLayout, QLabel,
                              QTableWidget, QTableWidgetItem, QHeaderView, QFileDialog,
                              QSplitter, QCheckBox, QMessageBox, QLineEdit,
-                             QAbstractItemView)
+                             QAbstractItemView, QDialog, QDialogButtonBox)
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QTimer, QPoint
 from PyQt5.QtGui import QTextCursor
 from datetime import datetime
@@ -556,6 +556,10 @@ class MonitoringScreen(QWidget):
         hdr.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # FMI Description
         hdr.setSectionResizeMode(4, QHeaderView.Stretch)           # Error Description
 
+        # Double-clicking a cell opens a dialog with the full, unclipped text —
+        # needed because long FMI/Error descriptions don't fit in the column width.
+        self.dm1_dtc_table.cellDoubleClicked.connect(self._show_dtc_cell_detail)
+
         outer_layout.addWidget(self.dm1_dtc_table)
 
         # Footer note
@@ -677,6 +681,52 @@ class MonitoringScreen(QWidget):
                 self.dm1_dtc_table.setItem(row, 2, QTableWidgetItem(str(dtc['fmi'])))
                 self.dm1_dtc_table.setItem(row, 3, QTableWidgetItem(dtc['fmi_desc']))
                 self.dm1_dtc_table.setItem(row, 4, QTableWidgetItem(dtc.get('error_desc', 'Unknown')))
+
+    def _show_dtc_cell_detail(self, row: int, column: int) -> None:
+        """
+        Show a popup dialog with the full, unclipped text of a double-clicked DTC
+        table cell (e.g. a long "FMI Description" or "Error Description" that is
+        cut off in the table even when the window is maximized).
+
+        Args:
+            row: Row index of the double-clicked cell.
+            column: Column index of the double-clicked cell.
+        """
+        item = self.dm1_dtc_table.item(row, column)
+        if item is None:
+            return
+
+        column_label = self.dm1_dtc_table.horizontalHeaderItem(column).text()
+        sa_item = self.dm1_dtc_table.item(row, 0)
+        spn_item = self.dm1_dtc_table.item(row, 1)
+        fmi_item = self.dm1_dtc_table.item(row, 2)
+        context = (
+            f"Source (SA): {sa_item.text() if sa_item else '-'}   "
+            f"SPN: {spn_item.text() if spn_item else '-'}   "
+            f"FMI: {fmi_item.text() if fmi_item else '-'}"
+        )
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Full {column_label}")
+        dialog.resize(600, 300)
+        layout = QVBoxLayout()
+
+        context_label = QLabel(context)
+        context_label.setStyleSheet("color: #6c757d; font-size: 9pt; padding: 2px;")
+        layout.addWidget(context_label)
+
+        text_box = QTextEdit()
+        text_box.setPlainText(item.text())
+        text_box.setReadOnly(True)
+        text_box.setStyleSheet("font-family: monospace; font-size: 10pt;")
+        layout.addWidget(text_box)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
+        buttons.accepted.connect(dialog.accept)
+        layout.addWidget(buttons)
+
+        dialog.setLayout(layout)
+        dialog.exec_()
 
     def _tick_flash_lamps(self) -> None:
         """Toggle the background colour of all currently-flashing DM1 lamps.
