@@ -768,6 +768,14 @@ class MonitoringScreen(QWidget):
         layout.addWidget(buttons)
 
         dialog.setLayout(layout)
+
+        # Centre the popup over the main application window rather than letting
+        # the window manager pick a position. On multi-monitor setups the
+        # default placement can land on a different screen than the one the
+        # user is looking at, making the dialog look like it "didn't open".
+        main_window = self.window()
+        dialog.move(main_window.frameGeometry().center() - dialog.rect().center())
+
         dialog.exec_()
 
     def _tick_flash_lamps(self) -> None:
