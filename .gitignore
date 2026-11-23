@@ -1,0 +1,13 @@
+# Python bytecode caches — must never be committed; stale .pyc files can
+# shadow updated source (.py) files and silently reintroduce fixed bugs.
+__pycache__/
+*.pyc
+*.pyo
+
+# PyInstaller build artifacts
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
