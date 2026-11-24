@@ -103,6 +103,10 @@ class MonitoringScreen(QWidget):
         self.dm1_dtc_table = None
         # Status label shown above DTC table
         self.dm1_status_label = None
+        # Cached key of the last-rendered DTC table content, used to skip
+        # redundant table rebuilds when FECA messages repeat unchanged data
+        # (see _rebuild_dm1_display).
+        self.dm1_last_dtcs_key = None
         # Per-source DM1 data: {source_addr: decoded_dict} - keyed by SA (0x00-0xFF)
         self.dm1_data_by_source: Dict[int, dict] = {}
 
@@ -666,8 +670,6 @@ class MonitoringScreen(QWidget):
             self.dm1_flash_timer.stop()
 
         # --- Rebuild DTC table from all sources ---
-        self.dm1_dtc_table.setRowCount(0)
-
         all_dtcs = []  # list of (sa_hex, dtc_dict)
         for sa, decoded in sorted(self.dm1_data_by_source.items()):
             for dtc in decoded.get('dtcs', []):
@@ -688,14 +690,31 @@ class MonitoringScreen(QWidget):
             self.dm1_status_label.setStyleSheet(
                 "color: #dc3545; font-size: 10pt; font-weight: bold; padding: 4px;"
             )
-            for sa_hex, dtc in all_dtcs:
-                row = self.dm1_dtc_table.rowCount()
-                self.dm1_dtc_table.insertRow(row)
-                self.dm1_dtc_table.setItem(row, 0, QTableWidgetItem(sa_hex))
-                self.dm1_dtc_table.setItem(row, 1, QTableWidgetItem(str(dtc['spn'])))
-                self.dm1_dtc_table.setItem(row, 2, QTableWidgetItem(str(dtc['fmi'])))
-                self.dm1_dtc_table.setItem(row, 3, QTableWidgetItem(dtc['fmi_desc']))
-                self.dm1_dtc_table.setItem(row, 4, QTableWidgetItem(dtc.get('error_desc', 'Unknown')))
+
+        # FECA messages repeat every cycle even when the fault list hasn't
+        # changed. Rebuilding (clearing + re-inserting) the table on every
+        # single message destroys and recreates the QTableWidgetItems, which
+        # causes unnecessary flicker and can interfere with in-progress UI
+        # interactions (e.g. the double-click detail popup) while the user
+        # hasn't noticed the table is silently refreshing underneath them.
+        # Only touch the table when the DTC content actually changed.
+        dtcs_key = tuple(
+            (sa_hex, dtc['spn'], dtc['fmi'], dtc['fmi_desc'], dtc.get('error_desc', 'Unknown'))
+            for sa_hex, dtc in all_dtcs
+        )
+        if dtcs_key == self.dm1_last_dtcs_key:
+            return
+        self.dm1_last_dtcs_key = dtcs_key
+
+        self.dm1_dtc_table.setRowCount(0)
+        for sa_hex, dtc in all_dtcs:
+            row = self.dm1_dtc_table.rowCount()
+            self.dm1_dtc_table.insertRow(row)
+            self.dm1_dtc_table.setItem(row, 0, QTableWidgetItem(sa_hex))
+            self.dm1_dtc_table.setItem(row, 1, QTableWidgetItem(str(dtc['spn'])))
+            self.dm1_dtc_table.setItem(row, 2, QTableWidgetItem(str(dtc['fmi'])))
+            self.dm1_dtc_table.setItem(row, 3, QTableWidgetItem(dtc['fmi_desc']))
+            self.dm1_dtc_table.setItem(row, 4, QTableWidgetItem(dtc.get('error_desc', 'Unknown')))
 
     def _on_dtc_cell_clicked(self, row: int, column: int) -> None:
         """
