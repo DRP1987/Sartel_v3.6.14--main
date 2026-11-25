@@ -5,6 +5,11 @@ from typing import Dict, List, Any, Tuple
 # J1939 PGN for DM1 — Active Diagnostic Trouble Codes
 DM1_PGN = 0xFECA
 
+# J1939 PGN for DM2 — Previously Active (Stored) Diagnostic Trouble Codes.
+# DM2 shares the exact same byte layout as DM1, so decode_dm1() is reused
+# to decode DM2 messages as well.
+DM2_PGN = 0xFECB
+
 # Valid 2-bit lamp/flash field values (per J1939 DM1 lamp encoding used here):
 #   0b00 (0) = Off / Flash off  → "Off"
 #   0b01 (1) = On  / Flash on   → "On"
@@ -245,13 +250,18 @@ def decode_dm1(data: List[int]) -> Dict[str, Any]:
                   Lamp status = "Flash" when byte-0 bit = On AND byte-1 bit = Flash,
                                 "On"    when byte-0 bit = On AND byte-1 bit ≠ Flash,
                                 "Off"   otherwise.
-    • First DTC (bytes 2–4):
+    • First DTC (bytes 2–5):
                   bytes 2-3: SPN bits  0-15 (little-endian)
                   byte  4  : bits 7-5 = SPN bits 18-16 ; bits 4-0 = FMI
+                  byte  5  : bit  7   = SPN Conversion Method ; bits 6-0 = Occurrence Count (OC)
     • Each additional DTC (5 bytes each, starting at byte 5):
                   bytes +0,+1 : lamp status (same layout as byte 0)
                   bytes +2,+3 : SPN bits 0-15
                   byte  +4   : SPN bits 18-16 (bits 7-5) + FMI (bits 4-0)
+                  byte  +5   : bit 7 = SPN Conversion Method ; bits 6-0 = Occurrence Count (OC)
+
+    This same layout is used for both DM1 (PGN 0xFECA, active DTCs) and
+    DM2 (PGN 0xFECB, previously-active/stored DTCs) messages.
 
     Args:
         data: Raw CAN message bytes as a list of ints.
@@ -259,7 +269,7 @@ def decode_dm1(data: List[int]) -> Dict[str, Any]:
     Returns:
         Dict with keys:
         • 'lamps'  — dict of lamp names → status strings ("Off", "On", "Flash")
-        • 'dtcs'   — list of dicts, each with 'spn', 'fmi', 'fmi_desc'
+        • 'dtcs'   — list of dicts, each with 'spn', 'fmi', 'fmi_desc', 'oc'
     """
     result: Dict[str, Any] = {
         'lamps': {
@@ -304,11 +314,15 @@ def decode_dm1(data: List[int]) -> Dict[str, Any]:
         if spn_byte0 or spn_byte1 or fmi_byte:
             spn = spn_byte0 | (spn_byte1 << 8) | ((fmi_byte >> 5) << 16)
             fmi = fmi_byte & 0x1F
+            # Occurrence Count (OC) — bits 6-0 of the byte following the FMI byte
+            oc_byte = data[idx + 3] if len(data) > idx + 3 else None
+            oc = (oc_byte & 0x7F) if oc_byte is not None else None
             result['dtcs'].append({
                 'spn':        spn,
                 'fmi':        fmi,
                 'fmi_desc':   FMI_DESCRIPTIONS.get(fmi, f'FMI {fmi}'),
                 'error_desc': get_dtc_description(spn, fmi),
+                'oc':         oc,
             })
         idx += 3  # advance past first DTC
 
@@ -322,11 +336,15 @@ def decode_dm1(data: List[int]) -> Dict[str, Any]:
         if spn_byte0 or spn_byte1 or fmi_byte:
             spn = spn_byte0 | (spn_byte1 << 8) | ((fmi_byte >> 5) << 16)
             fmi = fmi_byte & 0x1F
+            # Occurrence Count (OC) — bits 6-0 of the byte following the FMI byte
+            oc_byte = data[idx + 5] if len(data) > idx + 5 else None
+            oc = (oc_byte & 0x7F) if oc_byte is not None else None
             result['dtcs'].append({
                 'spn':        spn,
                 'fmi':        fmi,
                 'fmi_desc':   FMI_DESCRIPTIONS.get(fmi, f'FMI {fmi}'),
                 'error_desc': get_dtc_description(spn, fmi),
+                'oc':         oc,
             })
         idx += 5
 

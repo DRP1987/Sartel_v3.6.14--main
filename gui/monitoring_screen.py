@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QTabWidget, QTextEdit,
                              QSplitter, QCheckBox, QMessageBox, QLineEdit,
                              QAbstractItemView, QDialog, QDialogButtonBox)
 from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QTimer, QPoint
-from PyQt5.QtGui import QTextCursor
+from PyQt5.QtGui import QTextCursor, QColor
 from datetime import datetime
 from typing import Dict, Any, List, Set, Optional
 import csv
@@ -17,7 +17,7 @@ from gui.installation_sheet_dialog import InstallationSheetDialog
 from canbus.pcan_interface import PCANInterface
 from canbus.signal_matcher import SignalMatcher
 from canbus.pgn_decoder import PGNDecoder
-from canbus.dm1_decoder import DM1_PGN, decode_dm1
+from canbus.dm1_decoder import DM1_PGN, DM2_PGN, decode_dm1
 from config.app_config import APP_NAME
 
 
@@ -109,6 +109,10 @@ class MonitoringScreen(QWidget):
         self.dm1_last_dtcs_key = None
         # Per-source DM1 data: {source_addr: decoded_dict} - keyed by SA (0x00-0xFF)
         self.dm1_data_by_source: Dict[int, dict] = {}
+        # Per-source DM2 (stored/previously-active DTC) data, populated only
+        # after the user presses "Request Store Error Codes" — ECUs don't
+        # broadcast DM2 unsolicited like they do DM1.
+        self.dm2_data_by_source: Dict[int, dict] = {}
 
         # Manual double-click tracking for the DTC table. Some environments
         # (RDP sessions, certain mice/trackpads, odd OS double-click-speed
@@ -550,14 +554,16 @@ class MonitoringScreen(QWidget):
         )
         outer_layout.addWidget(self.dm1_status_label)
 
-        # --- Active DTC Table ---
-        dtc_label = QLabel("Active Diagnostic Trouble Codes (DTCs)")
+        # --- Active / Stored DTC Table ---
+        dtc_label = QLabel("Diagnostic Trouble Codes (DTCs)")
         dtc_label.setStyleSheet("font-size: 11pt; font-weight: bold; color: #343a40;")
         outer_layout.addWidget(dtc_label)
 
         self.dm1_dtc_table = QTableWidget()
-        self.dm1_dtc_table.setColumnCount(5)
-        self.dm1_dtc_table.setHorizontalHeaderLabels(['Source (SA)', 'SPN', 'FMI', 'FMI Description', 'Error Description'])
+        self.dm1_dtc_table.setColumnCount(7)
+        self.dm1_dtc_table.setHorizontalHeaderLabels(
+            ['Source (SA)', 'Status', 'Counter', 'SPN', 'FMI', 'FMI Description', 'Error Description']
+        )
         self.dm1_dtc_table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.dm1_dtc_table.setSelectionBehavior(QTableWidget.SelectRows)
         self.dm1_dtc_table.setAlternatingRowColors(True)
@@ -565,10 +571,12 @@ class MonitoringScreen(QWidget):
 
         hdr = self.dm1_dtc_table.horizontalHeader()
         hdr.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # Source
-        hdr.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # SPN
-        hdr.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # FMI
-        hdr.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # FMI Description
-        hdr.setSectionResizeMode(4, QHeaderView.Stretch)           # Error Description
+        hdr.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Status (Active/Stored)
+        hdr.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # Counter
+        hdr.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # SPN
+        hdr.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # FMI
+        hdr.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # FMI Description
+        hdr.setSectionResizeMode(6, QHeaderView.Stretch)           # Error Description
 
         # Double-clicking a cell opens a dialog with the full, unclipped text —
         # needed because long FMI/Error descriptions don't fit in the column width.
@@ -581,9 +589,24 @@ class MonitoringScreen(QWidget):
 
         outer_layout.addWidget(self.dm1_dtc_table)
 
+        # --- Request stored error codes button ---
+        store_btn_layout = QHBoxLayout()
+        store_btn_layout.addStretch()
+        self.dm1_request_stored_btn = QPushButton("🗄️ Request Store Error Codes")
+        self.dm1_request_stored_btn.setStyleSheet(
+            "QPushButton { background-color: #C0C0C0; color: black; border-radius: 6px; "
+            "padding: 6px 16px; font-size: 10pt; }"
+            "QPushButton:hover { background-color: #929591; }"
+            "QPushButton:pressed { background-color: #808080; }"
+        )
+        self.dm1_request_stored_btn.clicked.connect(self._request_stored_error_codes)
+        store_btn_layout.addWidget(self.dm1_request_stored_btn)
+        store_btn_layout.addStretch()
+        outer_layout.addLayout(store_btn_layout)
+
         # Footer note
         if self.connected:
-            note_text = "DM1 fault codes update in real-time from PGN 0xFECA"
+            note_text = "DM1 fault codes update in real-time from PGN 0xFECA. Stored (DM2/0xFECB) codes are fetched on request."
         else:
             note_text = "⚠️ Offline mode — no live data available."
         note_label = QLabel(note_text)
@@ -613,6 +636,22 @@ class MonitoringScreen(QWidget):
             from PyQt5.QtWidgets import QMessageBox
             QMessageBox.warning(self, "Request Failed",
                                 "Could not send engine hours request. Check CAN bus connection.")
+
+    def _request_stored_error_codes(self) -> None:
+        """
+        Send a J1939 request for DM2 (PGN 0xFECB) — stored/previously-active DTCs.
+
+        Unlike DM1 (FECA), which all ECUs broadcast continuously, DM2 is only
+        sent in response to a request. CAN ID 0x18EAFFF9 is a global request
+        (priority 6, PGN 0xEA00, destination 0xFF = all ECUs, source 0xF9),
+        with data bytes CB FE 00 requesting PGN 0xFECB.
+        """
+        request_can_id = 0x18EAFFF9
+        ok = self.pcan_interface.send_message(request_can_id, [0xCB, 0xFE, 0x00], is_extended_id=True)
+        if not ok:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Request Failed",
+                                "Could not send store error codes request. Check CAN bus connection.")
 
     def _rebuild_dm1_display(self) -> None:
         """
@@ -669,22 +708,25 @@ class MonitoringScreen(QWidget):
         elif not new_flashing and self.dm1_flash_timer.isActive():
             self.dm1_flash_timer.stop()
 
-        # --- Rebuild DTC table from all sources ---
-        all_dtcs = []  # list of (sa_hex, dtc_dict)
+        # --- Rebuild DTC table from all sources (active DM1 + stored DM2) ---
+        all_dtcs = []  # list of (sa_hex, dtc_dict, status_label, status_color)
         for sa, decoded in sorted(self.dm1_data_by_source.items()):
             for dtc in decoded.get('dtcs', []):
-                all_dtcs.append((f"0x{sa:02X}", dtc))
+                all_dtcs.append((f"0x{sa:02X}", dtc, "Active", "#dc3545"))
+        for sa, decoded in sorted(self.dm2_data_by_source.items()):
+            for dtc in decoded.get('dtcs', []):
+                all_dtcs.append((f"0x{sa:02X}", dtc, "Stored", "#6c757d"))
 
-        if not all_dtcs:
+        active_count = sum(len(d.get('dtcs', [])) for d in self.dm1_data_by_source.values())
+        if active_count == 0:
             self.dm1_status_label.setText("✅ No active fault codes")
             self.dm1_status_label.setStyleSheet(
                 "color: #28a745; font-size: 10pt; font-weight: bold; padding: 4px;"
             )
         else:
-            count = len(all_dtcs)
             src_count = len(self.dm1_data_by_source)
             self.dm1_status_label.setText(
-                f"🔴 {count} active fault code{'s' if count != 1 else ''} "
+                f"🔴 {active_count} active fault code{'s' if active_count != 1 else ''} "
                 f"from {src_count} source{'s' if src_count != 1 else ''}"
             )
             self.dm1_status_label.setStyleSheet(
@@ -699,22 +741,34 @@ class MonitoringScreen(QWidget):
         # hasn't noticed the table is silently refreshing underneath them.
         # Only touch the table when the DTC content actually changed.
         dtcs_key = tuple(
-            (sa_hex, dtc['spn'], dtc['fmi'], dtc['fmi_desc'], dtc.get('error_desc', 'Unknown'))
-            for sa_hex, dtc in all_dtcs
+            (sa_hex, status_label, dtc['spn'], dtc['fmi'], dtc['fmi_desc'],
+             dtc.get('error_desc', 'Unknown'), dtc.get('oc'))
+            for sa_hex, dtc, status_label, _ in all_dtcs
         )
         if dtcs_key == self.dm1_last_dtcs_key:
             return
         self.dm1_last_dtcs_key = dtcs_key
 
         self.dm1_dtc_table.setRowCount(0)
-        for sa_hex, dtc in all_dtcs:
+        for sa_hex, dtc, status_label, status_color in all_dtcs:
             row = self.dm1_dtc_table.rowCount()
             self.dm1_dtc_table.insertRow(row)
             self.dm1_dtc_table.setItem(row, 0, QTableWidgetItem(sa_hex))
-            self.dm1_dtc_table.setItem(row, 1, QTableWidgetItem(str(dtc['spn'])))
-            self.dm1_dtc_table.setItem(row, 2, QTableWidgetItem(str(dtc['fmi'])))
-            self.dm1_dtc_table.setItem(row, 3, QTableWidgetItem(dtc['fmi_desc']))
-            self.dm1_dtc_table.setItem(row, 4, QTableWidgetItem(dtc.get('error_desc', 'Unknown')))
+
+            status_item = QTableWidgetItem(status_label)
+            status_item.setForeground(QColor(status_color))
+            font = status_item.font()
+            font.setBold(True)
+            status_item.setFont(font)
+            self.dm1_dtc_table.setItem(row, 1, status_item)
+
+            oc = dtc.get('oc')
+            self.dm1_dtc_table.setItem(row, 2, QTableWidgetItem(str(oc) if oc is not None else "-"))
+
+            self.dm1_dtc_table.setItem(row, 3, QTableWidgetItem(str(dtc['spn'])))
+            self.dm1_dtc_table.setItem(row, 4, QTableWidgetItem(str(dtc['fmi'])))
+            self.dm1_dtc_table.setItem(row, 5, QTableWidgetItem(dtc['fmi_desc']))
+            self.dm1_dtc_table.setItem(row, 6, QTableWidgetItem(dtc.get('error_desc', 'Unknown')))
 
     def _on_dtc_cell_clicked(self, row: int, column: int) -> None:
         """
@@ -759,10 +813,12 @@ class MonitoringScreen(QWidget):
 
         column_label = self.dm1_dtc_table.horizontalHeaderItem(column).text()
         sa_item = self.dm1_dtc_table.item(row, 0)
-        spn_item = self.dm1_dtc_table.item(row, 1)
-        fmi_item = self.dm1_dtc_table.item(row, 2)
+        status_item = self.dm1_dtc_table.item(row, 1)
+        spn_item = self.dm1_dtc_table.item(row, 3)
+        fmi_item = self.dm1_dtc_table.item(row, 4)
         context = (
             f"Source (SA): {sa_item.text() if sa_item else '-'}   "
+            f"Status: {status_item.text() if status_item else '-'}   "
             f"SPN: {spn_item.text() if spn_item else '-'}   "
             f"FMI: {fmi_item.text() if fmi_item else '-'}"
         )
@@ -1400,6 +1456,21 @@ class MonitoringScreen(QWidget):
                     return
                 dm1_data = decode_dm1(data_bytes)
                 self.dm1_data_by_source[source_addr] = dm1_data
+                self._rebuild_dm1_display()
+            elif received_pgn == DM2_PGN:
+                source_addr = message.arbitration_id & 0xFF
+                data_bytes = list(message.data)
+                # Ignore "no stored fault" FECB frames: byte0=0xFF, byte1=0xFF, bytes2-5=0x00
+                if (len(data_bytes) >= 6
+                        and data_bytes[0] == 0xFF
+                        and data_bytes[1] == 0xFF
+                        and data_bytes[2] == 0x00
+                        and data_bytes[3] == 0x00
+                        and data_bytes[4] == 0x00
+                        and data_bytes[5] == 0x00):
+                    return
+                dm2_data = decode_dm1(data_bytes)
+                self.dm2_data_by_source[source_addr] = dm2_data
                 self._rebuild_dm1_display()
 
     @pyqtSlot(str)
