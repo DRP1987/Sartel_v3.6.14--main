@@ -83,7 +83,13 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    # UPX compresses the exe/DLLs, but that compression is also a common
+    # technique used by malware packers, which causes Windows Defender and
+    # other AV engines to periodically flag freshly built PyInstaller
+    # binaries as suspicious (quarantine/"action blocked"), leaving the
+    # .exe unable to start ("Windows cannot access the specified device,
+    # path, or file"). Disabling UPX removes that false-positive trigger.
+    upx=False,
     console=False,  # Set to True for debugging
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -99,7 +105,7 @@ coll = COLLECT(
     a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='CANBusMonitor',
 )
